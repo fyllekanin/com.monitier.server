@@ -3,49 +3,56 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"github.com/fyllekanin/com.monitier.server/configs"
-	"github.com/fyllekanin/com.monitier.server/databases"
+	"github.com/fyllekanin/com.monitier.server/application"
+	"github.com/fyllekanin/com.monitier.server/config"
+	"github.com/fyllekanin/com.monitier.server/database"
 	"github.com/gorilla/mux"
-	_ "github.com/lib/pq"
 	"log"
 	"net/http"
+	"os"
 )
 
-type Application struct {
-	Db     *sql.DB            `json:"db"`
-	Router *mux.Router        `json:"router"`
-	Config *configs.AppConfig `json:"config"`
-}
-
-func GetNewApplication(router *mux.Router, db *sql.DB, config *configs.AppConfig) *Application {
-	return &Application{
-		Db:     db,
-		Router: router,
-		Config: config,
-	}
-}
-
 func main() {
-	var config = configs.GetAppConfig()
-	var db = getDatabaseConnection(config)
+	var conf = config.GetAppConfig()
+	var db = getDatabaseConnection(conf)
+	runSqlFiles(db)
 	router := mux.NewRouter()
 	apiRouter := router.PathPrefix("/api/v1").Subrouter()
 
-	var application = GetNewApplication(apiRouter, db, config)
+	var app = application.GetNewApplication(apiRouter, db, conf)
 
 	// product_api.GetApi(application)
 	// auth_api.GetApi(application)
 
-	fmt.Println(fmt.Sprintf("Server running on %d", application.Config.Port))
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", application.Config.Port), router))
+	fmt.Println(fmt.Sprintf("Server running on %s", app.Config.Port))
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", app.Config.Port), router))
 }
 
-func getDatabaseConnection(config *configs.AppConfig) *sql.DB {
+func runSqlFiles(db *sql.DB) {
+	files, err := os.ReadDir("sql/")
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+	for _, file := range files {
+		c, err := os.ReadFile(fmt.Sprintf("sql/%s", file.Name()))
+		if err != nil {
+			log.Fatalln(err.Error())
+		}
+		sqlString := string(c)
+		_, err = db.Exec(sqlString)
+		if err != nil {
+			log.Fatalln(err.Error())
+		}
+	}
+}
+
+func getDatabaseConnection(config *config.AppConfig) *sql.DB {
 	switch config.DatabaseType {
 	case "SQLite":
+		return database.GetSqliteDatabase()
 		break
 	case "Postgres":
-		return databases.GetPostgresDatabase(config)
+		return database.GetPostgresDatabase(config)
 		break
 	default:
 		log.Fatalln(fmt.Sprintf("Database type %s is not supported", config.DatabaseType))
