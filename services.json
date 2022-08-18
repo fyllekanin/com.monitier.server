@@ -1,0 +1,10 @@
+[
+  {
+    "name": "Google",
+    "host": "https://google.com"
+  },
+  {
+    "name": "Youtube",
+    "host": "https://youtube.com"
+  }
+]

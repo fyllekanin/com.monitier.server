@@ -1,8 +1,15 @@
 package config
 
 import (
+	"encoding/json"
+	"log"
 	"os"
 )
+
+type AppService struct {
+	Name string `json:"name"`
+	Host string `json:"host"`
+}
 
 type AppConfig struct {
 	Port             string
@@ -12,6 +19,7 @@ type AppConfig struct {
 	DatabaseUsername string
 	DatabasePassword string
 	DatabasePort     string
+	Services         []AppService
 }
 
 func getOSEnvironmentOrDefault(env string, def string) string {
@@ -23,6 +31,16 @@ func getOSEnvironmentOrDefault(env string, def string) string {
 	}
 }
 
+func getServicesConfig() []AppService {
+	c, err := os.ReadFile("services.json")
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+	var services []AppService
+	json.Unmarshal(c, &services)
+	return services
+}
+
 func GetAppConfig() *AppConfig {
 	return &AppConfig{
 		Port:             getOSEnvironmentOrDefault("SERVICE_PORT", "8080"),
@@ -32,5 +50,6 @@ func GetAppConfig() *AppConfig {
 		DatabaseUsername: getOSEnvironmentOrDefault("DATABASE_USERNAME", "username"),
 		DatabasePassword: getOSEnvironmentOrDefault("DATABASE_PASSWORD", "password"),
 		DatabasePort:     getOSEnvironmentOrDefault("DATABASE_PORT", ""),
+		Services:         getServicesConfig(),
 	}
 }

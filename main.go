@@ -3,9 +3,11 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"github.com/fyllekanin/com.monitier.server/api"
 	"github.com/fyllekanin/com.monitier.server/application"
 	"github.com/fyllekanin/com.monitier.server/config"
 	"github.com/fyllekanin/com.monitier.server/database"
+	"github.com/fyllekanin/com.monitier.server/task"
 	"github.com/gorilla/mux"
 	"log"
 	"net/http"
@@ -16,12 +18,13 @@ func main() {
 	var conf = config.GetAppConfig()
 	var db = getDatabaseConnection(conf)
 	runSqlFiles(db)
+
 	router := mux.NewRouter()
 	apiRouter := router.PathPrefix("/api/v1").Subrouter()
-
 	var app = application.GetNewApplication(apiRouter, db, conf)
+	task.StartScheduler(app)
 
-	// product_api.GetApi(application)
+	api.GetApi(app)
 	// auth_api.GetApi(application)
 
 	fmt.Println(fmt.Sprintf("Server running on %s", app.Config.Port))
