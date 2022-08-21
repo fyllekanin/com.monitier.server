@@ -8,6 +8,7 @@ import (
 	"github.com/fyllekanin/com.monitier.server/config"
 	"github.com/fyllekanin/com.monitier.server/database"
 	"github.com/fyllekanin/com.monitier.server/task"
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"log"
 	"net/http"
@@ -27,8 +28,9 @@ func main() {
 	api.GetApi(app)
 	// auth_api.GetApi(application)
 
+	corsObj := handlers.AllowedOrigins([]string{"*"})
 	fmt.Println(fmt.Sprintf("Server running on %s", app.Config.Port))
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", app.Config.Port), router))
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", app.Config.Port), handlers.CORS(corsObj)(router)))
 }
 
 func runSqlFiles(db *sql.DB) {
