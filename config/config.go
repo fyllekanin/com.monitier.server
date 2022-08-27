@@ -2,14 +2,10 @@ package config
 
 import (
 	"encoding/json"
+	"github.com/fyllekanin/com.monitier.server/task"
 	"log"
 	"os"
 )
-
-type AppService struct {
-	Name string `json:"name"`
-	Host string `json:"host"`
-}
 
 type AppConfig struct {
 	Port             string
@@ -19,7 +15,7 @@ type AppConfig struct {
 	DatabaseUsername string
 	DatabasePassword string
 	DatabasePort     string
-	Services         []AppService
+	Services         []*task.Service
 }
 
 func getOSEnvironmentOrDefault(env string, def string) string {
@@ -31,12 +27,12 @@ func getOSEnvironmentOrDefault(env string, def string) string {
 	}
 }
 
-func getServicesConfig() []AppService {
+func getServicesConfig() []*task.Service {
 	c, err := os.ReadFile("services.json")
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
-	var services []AppService
+	var services []*task.Service
 	json.Unmarshal(c, &services)
 	return services
 }

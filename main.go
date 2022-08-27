@@ -7,7 +7,7 @@ import (
 	"github.com/fyllekanin/com.monitier.server/application"
 	"github.com/fyllekanin/com.monitier.server/config"
 	"github.com/fyllekanin/com.monitier.server/database"
-	"github.com/fyllekanin/com.monitier.server/task"
+	"github.com/fyllekanin/com.monitier.server/database/repository"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"log"
@@ -23,10 +23,11 @@ func main() {
 	router := mux.NewRouter()
 	apiRouter := router.PathPrefix("/api/v1").Subrouter()
 	var app = application.GetNewApplication(apiRouter, db, conf)
-	task.StartScheduler(app)
 
-	api.GetApi(app)
-	// auth_api.GetApi(application)
+	for _, service := range app.Config.Services {
+		service.Start(repository.NewPingRepository(db))
+	}
+	api.GetPingApi(app)
 
 	corsObj := handlers.AllowedOrigins([]string{"*"})
 	fmt.Println(fmt.Sprintf("Server running on %s", app.Config.Port))

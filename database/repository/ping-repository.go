@@ -3,7 +3,6 @@ package repository
 import (
 	"database/sql"
 	"errors"
-	"github.com/fyllekanin/com.monitier.server/config"
 	"github.com/fyllekanin/com.monitier.server/database/entity"
 	"log"
 	"time"
@@ -13,9 +12,9 @@ type PingRepository struct {
 	db *sql.DB
 }
 
-func (pingRepository *PingRepository) InsertPing(service config.AppService, responseTime int) error {
+func (pingRepository *PingRepository) InsertPing(serviceName string, responseTime int) error {
 	_, err := pingRepository.db.Exec("INSERT INTO pings (serviceName, responseTime, createdAt, updatedAt) VALUES ($1, $2, $3, $4)",
-		service.Name, responseTime, time.Now().Unix(), time.Now().Unix())
+		serviceName, responseTime, time.Now().Unix(), time.Now().Unix())
 	if err != nil {
 		log.Println(err.Error())
 		return errors.New("failed to query statement")
