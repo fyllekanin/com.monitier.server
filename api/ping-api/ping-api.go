@@ -1,14 +1,35 @@
-package api
+package ping_api
 
 import (
 	"encoding/json"
 	"github.com/fyllekanin/com.monitier.server/application"
 	"github.com/fyllekanin/com.monitier.server/database/repository"
 	"net/http"
+	"time"
 )
 
 type PingApi struct {
 	application *application.Application
+}
+
+type Overview struct {
+	Day                 int `json:"day"`
+	AverageResponseTime int `json:"averageResponseTime"`
+	DataPoints          int `json:"dataPoints"`
+}
+
+func (pingApi *PingApi) getOverview(w http.ResponseWriter, r *http.Request) {
+	var serviceName = r.URL.Query().Get("serviceName")
+	var pingRepository = repository.NewPingRepository(pingApi.application.Db)
+
+	pings, err := pingRepository.GetPingsSinceFor(serviceName, time.Now().Unix()-time.Now().Add(90*(-time.Hour*24)).Unix())
+	if err != nil {
+		w.WriteHeader(400)
+		json.NewEncoder(w).Encode(err.Error())
+		return
+	}
+
+	json.NewEncoder(w).Encode(GetOverview(pings))
 }
 
 func (pingApi *PingApi) stopService(w http.ResponseWriter, r *http.Request) {
@@ -16,6 +37,18 @@ func (pingApi *PingApi) stopService(w http.ResponseWriter, r *http.Request) {
 	for _, service := range pingApi.application.Config.Services {
 		if service.Name == serviceName {
 			service.Stop()
+			break
+		}
+	}
+
+	w.WriteHeader(200)
+}
+
+func (pingApi *PingApi) startService(w http.ResponseWriter, r *http.Request) {
+	var serviceName = r.URL.Query().Get("serviceName")
+	for _, service := range pingApi.application.Config.Services {
+		if service.Name == serviceName {
+			service.Start(repository.NewPingRepository(pingApi.application.Db))
 			break
 		}
 	}
@@ -42,6 +75,7 @@ func GetPingApi(application *application.Application) *PingApi {
 	var subRouter = application.Router.PathPrefix("/pings").Subrouter()
 
 	subRouter.HandleFunc("", api.getPings).Methods("GET")
+	subRouter.HandleFunc("/overview", api.getOverview).Methods("GET")
 	subRouter.HandleFunc("/stop", api.stopService).Methods("GET")
 	return api
 }

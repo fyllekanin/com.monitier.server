@@ -3,7 +3,7 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"github.com/fyllekanin/com.monitier.server/api"
+	"github.com/fyllekanin/com.monitier.server/api/ping-api"
 	"github.com/fyllekanin/com.monitier.server/application"
 	"github.com/fyllekanin/com.monitier.server/config"
 	"github.com/fyllekanin/com.monitier.server/database"
@@ -27,7 +27,7 @@ func main() {
 	for _, service := range app.Config.Services {
 		service.Start(repository.NewPingRepository(db))
 	}
-	api.GetPingApi(app)
+	ping_api.GetPingApi(app)
 
 	corsObj := handlers.AllowedOrigins([]string{"*"})
 	fmt.Println(fmt.Sprintf("Server running on %s", app.Config.Port))
