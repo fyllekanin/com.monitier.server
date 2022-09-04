@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "develop" ]
 
   workflow_dispatch:
 
@@ -34,3 +34,4 @@ jobs:
           tags: 0.0.1
           labels: |
             com.monitier.server.image.title=Server
+
