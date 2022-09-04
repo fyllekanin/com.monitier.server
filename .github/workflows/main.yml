@@ -27,5 +27,5 @@ jobs:
           context: .
           push: true
           tags: 0.0.1
-          labels:
-            title: Testing
+          labels: |
+            com.monitier.server.image.title=Server
