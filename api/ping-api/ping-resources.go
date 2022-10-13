@@ -57,6 +57,7 @@ func GetOverviewDays(pings []entity.PingEntity) []*Overview {
 				count++
 			}
 		}
+		
 		if responseTimeTotal > 0 {
 			response = append(response, &Overview{
 				Day:                 i,
